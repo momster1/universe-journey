@@ -9,31 +9,44 @@
 body{overflow:hidden;background:#000}
 canvas{display:block;width:100vw;height:100vh;}
 </style>
-<!-- CDN远程加载Three.js，无需本地下载 -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 <script>
-// 1. 创建3D场景容器
 const scene = new THREE.Scene();
-// 2. 创建相机（镜头）
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
-// 3. 创建渲染器（画布）
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100000);
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-// 相机初始距离
-camera.position.z = 100;
+camera.position.z = 1000;
 
-// 窗口缩放自适应
+// ========== 第4课核心：深空宇宙背景 ==========
+// 1. 场景渐变背景色（深空深蓝黑）
+scene.background = new THREE.Color("#020014");
+scene.fog = new THREE.Fog("#020014", 200, 1000);
+
+// 2. 远景星云面片
+function createNebula(color, posX, posY, posZ, size){
+  const geo = new THREE.PlaneGeometry(size, size);
+  const mat = new THREE.MeshBasicMaterial({
+    color: color, transparent:true, opacity:0.08, depthWrite:false
+  })
+  const nebula = new THREE.Mesh(geo, mat);
+  nebula.position.set(posX, posY, posZ);
+  scene.add(nebula);
+}
+// 多层星云分布
+createNebula("#300060", -1200, 200, -3000, 2500);
+createNebula("#002060", 1500, -400, -5000, 3000);
+createNebula("#601040", -800, -600, -8000, 4000);
+
 window.addEventListener('resize',()=>{
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 })
 
-// 循环渲染动画
 function animate(){
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
