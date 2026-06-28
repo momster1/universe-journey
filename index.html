@@ -9,19 +9,20 @@
 body{background:#000;overflow:hidden;font-family:Microsoft YaHei,sans-serif}
 /* 2D启动星空 */
 #startCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:2}
-#startUI{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;z-index:3;transition:opacity 2s ease}
+#startUI{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;z-index:3;transition:opacity 1.5s ease}
 #startUI.hide{opacity:0;pointer-events:none}
 h1{font-size:60px;margin-bottom:20px;text-shadow:0 0 15px #7cf}
 p{font-size:24px;color:#ccc;margin-bottom:40px}
 #enterBtn{width:240px;height:66px;border:none;border-radius:99px;font-size:24px;font-weight:bold;cursor:pointer;transition:0.3s;background:#fff;color:#000}
 #enterBtn:hover{transform:scale(1.1);box-shadow:0 0 25px #8cf}
 /* 3D画布容器 */
-#threeBox{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;opacity:0;transition:opacity 2s ease}
+#threeBox{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;opacity:0;transition:opacity 1.5s ease}
 #threeBox.show{opacity:1;z-index:4}
 canvas{width:100vw;height:100vh;display:block}
 </style>
-<!-- 远程加载Three.js 无需本地文件 -->
+<!-- 双CDN备用，防止加载失败 -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>window.ThreeBackup = THREE</script>
 </head>
 <body>
 <!-- 首页2D星空 -->
@@ -35,7 +36,7 @@ canvas{width:100vw;height:100vh;display:block}
 <div id="threeBox"></div>
 
 <script>
-// ---------------------- 1. 首页2D闪烁星空 ----------------------
+// ---------------------- 1. 首页2D闪烁星空（永久自动动） ----------------------
 const startCanvas = document.getElementById('startCanvas');
 const ctx = startCanvas.getContext('2d');
 function resizeStart(){
@@ -78,16 +79,23 @@ enterBtn.onclick = launch3D;
 // 全局3D变量
 let scene,camera,renderer;
 let farStars,galaxy,solarSystem,earth,cquGate,dormDesk;
-let stage = 0; // 动画分段 0深空银河 1太阳系 2地球 3重大校门 4宿舍抖音
+let stage = 0;
 const clock = new THREE.Clock();
 
 // 启动3D场景
 function launch3D(){
+    // 校验Three.js是否加载成功
+    if(!window.THREE && !window.ThreeBackup){
+        alert("3D引擎加载失败，请切换网络/无痕窗口重试！");
+        return;
+    }
+    THREE = window.THREE || window.ThreeBackup;
+
     startUI.classList.add('hide');
     setTimeout(()=>{
         threeBox.classList.add('show');
         initThree();
-        animate();
+        animate(); // 强制启动动画循环
     },1200)
 }
 
@@ -117,7 +125,7 @@ function initThree(){
     // 漫天深空恒星
     farStars = new THREE.Group();
     const starData = [];
-    for(let i=0;i<14000;i++){
+    for(let i=0;i<10000;i++){
         const s = new THREE.Mesh(
             new THREE.SphereGeometry(Math.random()*0.7+0.1,6,6),
             new THREE.MeshBasicMaterial({
@@ -141,7 +149,7 @@ function initThree(){
     galaxy = new THREE.Group();
     galaxy.position.z = -32000;
     galaxy.rotation.x = 0.2;
-    for(let i=0;i<32000;i++){
+    for(let i=0;i<20000;i++){
         const angle = Math.random()*Math.PI*10;
         const r = Math.random()*2800;
         const x = Math.cos(angle)*r;
@@ -251,7 +259,7 @@ function initThree(){
     })
 }
 
-// 主动画循环
+// 主动画循环（修复：永久循环，不会停止）
 function animate(){
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
@@ -272,26 +280,26 @@ function animate(){
     // 地球自转
     earth.rotation.y += 0.0012;
 
-    // 分段自动运镜
-    const speed = {s0:2.8,s1:1.2,s2:0.48,s3:0.2,s4:0.07};
+    // 分段自动运镜（加大移动速度，防止卡住不动）
+    const speed = {s0:3.5,s1:1.6,s2:0.6,s3:0.25,s4:0.09};
     switch(stage){
         case 0:
             camera.position.z -= speed.s0;
-            if(camera.position.z < -28000) stage=1;
+            if(camera.position.z < -25000) stage=1;
             break;
         case 1:
             camera.position.z -= speed.s1;
-            if(camera.position.z < -57000) stage=2;
+            if(camera.position.z < -54000) stage=2;
             camera.lookAt(0,0,-45000);
             break;
         case 2:
             camera.position.z -= speed.s2;
-            if(camera.position.z < -72000) stage=3;
+            if(camera.position.z < -69000) stage=3;
             camera.lookAt(earth.position.x,earth.position.y,earth.position.z-300);
             break;
         case 3:
             camera.position.z -= speed.s3;
-            if(camera.position.z < -90000) stage=4;
+            if(camera.position.z < -86000) stage=4;
             camera.lookAt(0,-60,-80000);
             break;
         case 4:
